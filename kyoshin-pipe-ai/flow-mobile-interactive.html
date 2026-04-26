@@ -203,7 +203,7 @@
   .tab .ico { font-size: 18px; }
 
   /* ===== 画面切り替え ===== */
-  .view { display: none; flex-direction: column; gap: 14px; flex: 1; }
+  .view { display: none; flex-direction: column; gap: 14px; flex: 1; min-height: 0; }
   .view.active { display: flex; }
 
   /* ===== STEP1 ===== */
@@ -707,7 +707,6 @@
 
 <div class="header">
   <h1>配管部材AI識別アプリ &mdash; インタラクティブデモ</h1>
-  <p>協振技研様 / 補助金申請向け 操作イメージ &middot; 各画面をタップして操作できます</p>
 </div>
 
 <div class="layout">
@@ -881,7 +880,6 @@
               <div class="l1">検出部材</div>
               <div class="l2"><strong id="totalCount">5</strong>点 / 確認済 <strong class="confirmed-num" id="confirmedCount">0</strong></div>
             </div>
-            <div class="conf-badge">平均 88%</div>
           </div>
 
           <div class="result-list" id="resultList">
@@ -1132,14 +1130,6 @@ function renderCard(it) {
       ? '<span class="rc-tag edit">&#9998; 修正中</span>'
       : '<span class="rc-tag">&#129504; AI推測</span>';
 
-  const confClass = it.confidence === 'mid' ? 'mid' : '';
-  const conf = !it.confirmed ? `
-    <div class="rc-conf">
-      <span>信頼度</span>
-      <span class="bar"><i class="${confClass}" style="width:${it.conf}%"></i></span>
-      <span class="pct ${confClass}">${it.conf}%</span>
-    </div>` : '';
-
   const actions = it.confirmed ? '' : (it.editing ? renderDropdown(it) : `
     <div class="rc-actions">
       <button class="rc-btn ok" onclick="confirmItem(${it.id})">&#10003;&nbsp; OK</button>
@@ -1160,7 +1150,6 @@ function renderCard(it) {
         ${tag}
         <div class="rc-name">${displayName}</div>
         <div class="rc-spec">${spec}</div>
-        ${conf}
       </div>
     </div>
     ${actions}
@@ -1170,13 +1159,12 @@ function renderCard(it) {
 function renderDropdown(it) {
   const opts = it.candidates.map((c, i) => {
     const sel = i === (it.selectedIndex !== null ? it.selectedIndex : 1) ? 'selected' : '';
-    const pcts = [71, 92, 58];
-    const right = sel ? '<span class="check">&#10003;</span>' : `<span class="pct-mini">${pcts[i]}%</span>`;
+    const right = sel ? '<span class="check">&#10003;</span>' : '';
     return `<div class="dropdown-opt ${sel}" onclick="selectCandidate(${it.id}, ${i})"><span>${c}</span>${right}</div>`;
   }).join('');
   return `
     <div class="dropdown">
-      <div class="dropdown-head">候補リスト &middot; 信頼度順</div>
+      <div class="dropdown-head">候補リスト</div>
       ${opts}
     </div>`;
 }
