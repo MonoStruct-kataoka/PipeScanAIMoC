@@ -635,7 +635,111 @@
   }
   .modal-field input:focus { border-color: #6366f1; }
   .modal-field input::placeholder { color: #cbd5e1; }
+
+  /* 検索＋リスト */
+  .modal-search { max-height: 92%; display: flex; flex-direction: column; }
+  .search-box {
+    position: relative;
+    margin-bottom: 10px;
+  }
+  .search-box input {
+    width: 100%;
+    padding: 10px 12px 10px 36px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: 12.5px;
+    font-family: inherit;
+    color: #1a1a2e;
+    background: #f8fafc;
+    outline: none;
+    transition: all 0.15s;
+  }
+  .search-box input:focus {
+    border-color: #6366f1;
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
+  }
+  .search-box input::placeholder { color: #94a3b8; }
+  .search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 13px;
+    color: #94a3b8;
+    pointer-events: none;
+  }
+
+  .parts-list {
+    flex: 1;
+    overflow-y: auto;
+    border: 1px solid #eef0f5;
+    border-radius: 10px;
+    background: #fff;
+    margin-bottom: 12px;
+    max-height: 340px;
+    min-height: 180px;
+  }
+  .parts-list::-webkit-scrollbar { width: 4px; }
+  .parts-list::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 2px; }
+  .parts-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    border-bottom: 1px solid #f1f5f9;
+    cursor: pointer;
+    transition: background 0.1s;
+  }
+  .parts-item:last-child { border-bottom: none; }
+  .parts-item:hover { background: #fafbff; }
+  .parts-item:active { background: #eef2ff; }
+  .parts-info { min-width: 0; flex: 1; }
+  .parts-name {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #1a1a2e;
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .parts-spec {
+    font-size: 10.5px;
+    color: #64748b;
+    margin-top: 2px;
+  }
+  .parts-cat {
+    font-size: 9.5px;
+    color: #4f46e5;
+    background: #eef2ff;
+    padding: 3px 8px;
+    border-radius: 10px;
+    font-weight: 700;
+    flex-shrink: 0;
+    margin-left: 8px;
+    white-space: nowrap;
+  }
+  .parts-cat.kann { background: #dbeafe; color: #2563eb; }
+  .parts-cat.tsugite { background: #f0fdf4; color: #059669; }
+  .parts-cat.valve { background: #fef3c7; color: #d97706; }
+  .parts-cat.heisoku { background: #fce7f3; color: #be185d; }
+  .parts-empty {
+    padding: 30px 20px;
+    text-align: center;
+    font-size: 12px;
+    color: #94a3b8;
+  }
+  .parts-count {
+    font-size: 10px;
+    color: #94a3b8;
+    text-align: right;
+    margin-bottom: 6px;
+    padding-right: 4px;
+  }
+
   .modal-footer { display: flex; gap: 8px; }
+  .modal-btn.full { flex: 1; }
   .modal-btn {
     flex: 1;
     padding: 10px 0;
@@ -1085,24 +1189,21 @@
         </div>
       </div>
 
-      <!-- ===== 部材追加モーダル ===== -->
+      <!-- ===== 部材追加モーダル（検索＋選択方式） ===== -->
       <div class="modal-overlay" id="addModal">
-        <div class="modal">
-          <div class="modal-header">部材を手動で追加</div>
-          <div class="modal-sub">必死部・テープ覆いなど、AIが認識できない部材を入力</div>
-          <div class="modal-body">
-            <div class="modal-field">
-              <label>部材名</label>
-              <input type="text" id="manualName" placeholder="例: バルブ チェック 50A">
-            </div>
-            <div class="modal-field">
-              <label>規格・備考（任意）</label>
-              <input type="text" id="manualSpec" placeholder="例: SUS / 必死部">
-            </div>
+        <div class="modal modal-search">
+          <div class="modal-header">部材を選択して追加</div>
+          <div class="modal-sub">マスタから検索 / タップで追加</div>
+          <div class="search-box">
+            <span class="search-icon">&#128269;</span>
+            <input type="text" id="searchInput" placeholder="部材名・規格・カテゴリで検索（例：エルボ）">
+          </div>
+          <div class="parts-count" id="partsCount"></div>
+          <div class="parts-list" id="partsList">
+            <!-- JS で生成 -->
           </div>
           <div class="modal-footer">
-            <button class="modal-btn cancel" id="modalCancel">キャンセル</button>
-            <button class="modal-btn primary" id="modalAdd">追加する</button>
+            <button class="modal-btn cancel full" id="modalCancel">閉じる</button>
           </div>
         </div>
       </div>
@@ -1339,28 +1440,82 @@ function updateConfirmedCount() {
     : 'すべて確認して次へ →';
 }
 
-// ===== 手動追加モーダル =====
+// ===== 部材マスタ（検索・選択用） =====
+const partsMaster = [
+  // 管
+  { name: 'PE管 SDR11', spec: '50A',         cat: '管' },
+  { name: 'PE管 SDR11', spec: '75A',         cat: '管' },
+  { name: 'PE管 SDR11', spec: '100A',        cat: '管' },
+  { name: 'PE管 SDR17', spec: '50A',         cat: '管' },
+  { name: '鋼管 SGP',   spec: '50A',         cat: '管' },
+  { name: '鋼管 SGP',   spec: '40A',         cat: '管' },
+  // 継手
+  { name: 'エルボ 90°',     spec: '50A SUS',     cat: '継手' },
+  { name: 'エルボ 45°',     spec: '50A SUS',     cat: '継手' },
+  { name: 'チーズ',          spec: '50A SUS',     cat: '継手' },
+  { name: 'ソケット',        spec: '50A SUS',     cat: '継手' },
+  { name: 'レジューサ',      spec: '50×40',       cat: '継手' },
+  { name: '径違いソケット',  spec: '50×40',       cat: '継手' },
+  { name: 'フランジ',        spec: '50A JIS 10K', cat: '継手' },
+  { name: 'ニップル',        spec: '50A',         cat: '継手' },
+  { name: 'ユニオン',        spec: '50A',         cat: '継手' },
+  // バルブ
+  { name: 'バルブ ボール',   spec: '50A レバー式', cat: 'バルブ' },
+  { name: 'バルブ ゲート',   spec: '50A',          cat: 'バルブ' },
+  { name: 'バルブ チェック', spec: '50A',          cat: 'バルブ' },
+  // 閉塞
+  { name: 'プラグ',          spec: '50A',          cat: '閉塞' },
+  { name: 'キャップ',        spec: '50A',          cat: '閉塞' },
+];
+
+const catClass = { '管': 'kann', '継手': 'tsugite', 'バルブ': 'valve', '閉塞': 'heisoku' };
+
+// ===== 部材追加モーダル =====
 let nextManualId = 1000;
-function openAddModal() {
-  document.getElementById('addModal').classList.add('show');
-  document.getElementById('manualName').value = '';
-  document.getElementById('manualSpec').value = '';
-  setTimeout(() => document.getElementById('manualName').focus(), 50);
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
 }
-function closeAddModal() {
-  document.getElementById('addModal').classList.remove('show');
-}
-function addManualItem() {
-  const name = document.getElementById('manualName').value.trim();
-  const spec = document.getElementById('manualSpec').value.trim();
-  if (!name) {
-    document.getElementById('manualName').focus();
+
+function renderPartsList(query) {
+  const q = (query || '').trim().toLowerCase();
+  const filtered = q
+    ? partsMaster.filter(p =>
+        p.name.toLowerCase().includes(q) ||
+        p.spec.toLowerCase().includes(q) ||
+        p.cat.toLowerCase().includes(q))
+    : partsMaster;
+
+  const list = document.getElementById('partsList');
+  const count = document.getElementById('partsCount');
+  count.textContent = q
+    ? `${filtered.length} 件 / 全 ${partsMaster.length} 件`
+    : `全 ${partsMaster.length} 件`;
+
+  if (filtered.length === 0) {
+    list.innerHTML = '<div class="parts-empty">該当する部材が見つかりません</div>';
     return;
   }
+  list.innerHTML = filtered.map((p, i) => `
+    <div class="parts-item" onclick="selectPart(${partsMaster.indexOf(p)})">
+      <div class="parts-info">
+        <div class="parts-name">${escapeHtml(p.name)}</div>
+        <div class="parts-spec">${escapeHtml(p.spec)}</div>
+      </div>
+      <div class="parts-cat ${catClass[p.cat] || ''}">${escapeHtml(p.cat)}</div>
+    </div>
+  `).join('');
+}
+
+function selectPart(idx) {
+  const p = partsMaster[idx];
+  if (!p) return;
   const newItem = {
     id: nextManualId++,
-    ai: name,
-    spec: spec || '手動入力',
+    ai: `${p.name} ${p.spec}`,
+    spec: `${p.cat} / 手動追加`,
     candidates: [],
     confirmed: true,
     manual: true,
@@ -1376,21 +1531,27 @@ function addManualItem() {
   renderCard(newItem);
   closeAddModal();
   updateConfirmedCount();
-  showToast('部材を追加しました');
-  // 追加カードまでスクロール
+  showToast(`${p.name} を追加しました`);
   card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
+
+function openAddModal() {
+  document.getElementById('addModal').classList.add('show');
+  document.getElementById('searchInput').value = '';
+  renderPartsList('');
+  setTimeout(() => document.getElementById('searchInput').focus(), 50);
+}
+function closeAddModal() {
+  document.getElementById('addModal').classList.remove('show');
+}
+
 document.getElementById('addItemBtn').addEventListener('click', openAddModal);
 document.getElementById('modalCancel').addEventListener('click', closeAddModal);
-document.getElementById('modalAdd').addEventListener('click', addManualItem);
 document.getElementById('addModal').addEventListener('click', (e) => {
   if (e.target.id === 'addModal') closeAddModal();
 });
-document.getElementById('manualName').addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') addManualItem();
-});
-document.getElementById('manualSpec').addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') addManualItem();
+document.getElementById('searchInput').addEventListener('input', (e) => {
+  renderPartsList(e.target.value);
 });
 
 document.getElementById('nextBtn').addEventListener('click', () => {
