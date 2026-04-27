@@ -474,6 +474,7 @@
   }
   .rc-tag.ok { background: #ecfdf5; color: #059669; }
   .rc-tag.edit { background: #fef3c7; color: #d97706; }
+  .rc-tag.manual { background: #fffbeb; color: #b45309; }
   .rc-name {
     font-size: 13px; font-weight: 700;
     line-height: 1.3;
@@ -552,6 +553,111 @@
   .dropdown-opt .check { color: #6366f1; font-weight: 700; opacity: 0; }
   .dropdown-opt.selected .check { opacity: 1; }
   .dropdown-opt .pct-mini { font-size: 10px; color: #94a3b8; }
+
+  /* +追加 ボタン */
+  .add-item-btn {
+    margin-top: 4px;
+    padding: 11px 0;
+    background: #fff;
+    border: 1.5px dashed #cbd5e1;
+    border-radius: 11px;
+    color: #475569;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: all 0.15s;
+    font-family: inherit;
+  }
+  .add-item-btn:hover {
+    border-color: #6366f1;
+    color: #4f46e5;
+    background: #fafbff;
+  }
+  .add-item-btn .plus { font-size: 16px; font-weight: 700; line-height: 1; }
+  .add-item-btn .hint { font-size: 10px; color: #94a3b8; margin-left: 4px; }
+
+  /* モーダル */
+  .modal-overlay {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(26, 26, 46, 0.55);
+    display: none;
+    align-items: flex-end;
+    justify-content: center;
+    z-index: 100;
+    border-radius: 28px;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal {
+    background: #fff;
+    width: 100%;
+    border-top-left-radius: 18px;
+    border-top-right-radius: 18px;
+    padding: 18px 18px 16px;
+    box-shadow: 0 -10px 30px rgba(0,0,0,0.2);
+    animation: slideUp 0.2s ease;
+  }
+  @keyframes slideUp {
+    from { transform: translateY(40px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  .modal-header {
+    font-size: 14px;
+    font-weight: 700;
+    color: #1a1a2e;
+    margin-bottom: 4px;
+    text-align: center;
+  }
+  .modal-sub {
+    font-size: 10.5px;
+    color: #64748b;
+    text-align: center;
+    margin-bottom: 14px;
+  }
+  .modal-body { display: flex; flex-direction: column; gap: 11px; margin-bottom: 14px; }
+  .modal-field { display: flex; flex-direction: column; gap: 4px; }
+  .modal-field label { font-size: 10.5px; color: #64748b; font-weight: 700; }
+  .modal-field input {
+    padding: 9px 11px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 12.5px;
+    font-family: inherit;
+    color: #1a1a2e;
+    outline: none;
+    transition: border-color 0.15s;
+    width: 100%;
+  }
+  .modal-field input:focus { border-color: #6366f1; }
+  .modal-field input::placeholder { color: #cbd5e1; }
+  .modal-footer { display: flex; gap: 8px; }
+  .modal-btn {
+    flex: 1;
+    padding: 10px 0;
+    border-radius: 9px;
+    border: none;
+    font-size: 12.5px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+  }
+  .modal-btn.cancel {
+    background: #fff;
+    color: #475569;
+    border: 1px solid #e2e8f0;
+  }
+  .modal-btn.cancel:hover { background: #f8fafc; }
+  .modal-btn.primary {
+    background: #4f46e5;
+    color: #fff;
+  }
+  .modal-btn.primary:hover { background: #4338ca; }
 
   .next-btn {
     margin-top: auto;
@@ -886,6 +992,11 @@
             <!-- JS で生成 -->
           </div>
 
+          <button class="add-item-btn" id="addItemBtn">
+            <span class="plus">+</span>
+            <span>映像で確認できなかった部材を追加</span>
+          </button>
+
           <button class="next-btn" id="nextBtn" disabled>すべて確認して次へ &rarr;</button>
         </div>
         <div class="tab-bar">
@@ -971,6 +1082,28 @@
           <div class="tab"><span class="ico">&#128194;</span><span>現場</span></div>
           <div class="tab active"><span class="ico">&#128202;</span><span>集計</span></div>
           <div class="tab"><span class="ico">&#9881;</span><span>設定</span></div>
+        </div>
+      </div>
+
+      <!-- ===== 部材追加モーダル ===== -->
+      <div class="modal-overlay" id="addModal">
+        <div class="modal">
+          <div class="modal-header">部材を手動で追加</div>
+          <div class="modal-sub">必死部・テープ覆いなど、AIが認識できない部材を入力</div>
+          <div class="modal-body">
+            <div class="modal-field">
+              <label>部材名</label>
+              <input type="text" id="manualName" placeholder="例: バルブ チェック 50A">
+            </div>
+            <div class="modal-field">
+              <label>規格・備考（任意）</label>
+              <input type="text" id="manualSpec" placeholder="例: SUS / 必死部">
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="modal-btn cancel" id="modalCancel">キャンセル</button>
+            <button class="modal-btn primary" id="modalAdd">追加する</button>
+          </div>
         </div>
       </div>
 
@@ -1105,6 +1238,10 @@ function runAnalysis() {
 
 // ===== STEP3 結果レンダリング =====
 function renderResults() {
+  // 手動追加分は再解析時にリセット
+  for (let i = items.length - 1; i >= 0; i--) {
+    if (items[i].manual) items.splice(i, 1);
+  }
   items.forEach(it => { it.confirmed = false; it.editing = false; it.selectedIndex = null; });
   const list = document.getElementById('resultList');
   list.innerHTML = '';
@@ -1124,11 +1261,13 @@ function renderCard(it) {
   if (it.confirmed) card.classList.add('confirmed');
   else if (it.editing) card.classList.add('editing');
 
-  const tag = it.confirmed
-    ? '<span class="rc-tag ok">&#10003; 確定</span>'
-    : it.editing
-      ? '<span class="rc-tag edit">&#9998; 修正中</span>'
-      : '<span class="rc-tag">&#129504; AI推測</span>';
+  const tag = it.manual
+    ? '<span class="rc-tag manual">&#9999;&#65039; 手動追加</span>'
+    : it.confirmed
+      ? '<span class="rc-tag ok">&#10003; 確定</span>'
+      : it.editing
+        ? '<span class="rc-tag edit">&#9998; 修正中</span>'
+        : '<span class="rc-tag">&#129504; AI推測</span>';
 
   const actions = it.confirmed ? '' : (it.editing ? renderDropdown(it) : `
     <div class="rc-actions">
@@ -1136,12 +1275,9 @@ function renderCard(it) {
       <button class="rc-btn ng" onclick="editItem(${it.id})">&#9998;&nbsp; 修正</button>
     </div>`);
 
-  const displayName = it.confirmed && it.selectedIndex !== null
-    ? it.candidates[it.selectedIndex]
-    : it.ai;
-  const spec = it.confirmed && it.selectedIndex !== null
-    ? '修正済み'
-    : it.spec;
+  const isModified = !it.manual && it.confirmed && it.selectedIndex != null;
+  const displayName = isModified ? it.candidates[it.selectedIndex] : it.ai;
+  const spec = isModified ? '修正済み' : it.spec;
 
   card.innerHTML = `
     <div class="rc-row">
@@ -1192,14 +1328,70 @@ function selectCandidate(id, idx) {
   updateConfirmedCount();
 }
 function updateConfirmedCount() {
+  const total = items.length;
   const n = items.filter(x => x.confirmed).length;
+  document.getElementById('totalCount').textContent = total;
   document.getElementById('confirmedCount').textContent = n;
   const btn = document.getElementById('nextBtn');
-  btn.disabled = n < items.length;
-  btn.textContent = n < items.length
-    ? `あと ${items.length - n} 点を確認してください`
+  btn.disabled = n < total || total === 0;
+  btn.textContent = n < total
+    ? `あと ${total - n} 点を確認してください`
     : 'すべて確認して次へ →';
 }
+
+// ===== 手動追加モーダル =====
+let nextManualId = 1000;
+function openAddModal() {
+  document.getElementById('addModal').classList.add('show');
+  document.getElementById('manualName').value = '';
+  document.getElementById('manualSpec').value = '';
+  setTimeout(() => document.getElementById('manualName').focus(), 50);
+}
+function closeAddModal() {
+  document.getElementById('addModal').classList.remove('show');
+}
+function addManualItem() {
+  const name = document.getElementById('manualName').value.trim();
+  const spec = document.getElementById('manualSpec').value.trim();
+  if (!name) {
+    document.getElementById('manualName').focus();
+    return;
+  }
+  const newItem = {
+    id: nextManualId++,
+    ai: name,
+    spec: spec || '手動入力',
+    candidates: [],
+    confirmed: true,
+    manual: true,
+    thumbCls: 'amber',
+  };
+  items.push(newItem);
+  // カードを末尾に追加
+  const list = document.getElementById('resultList');
+  const card = document.createElement('div');
+  card.className = 'result-card';
+  card.dataset.id = newItem.id;
+  list.appendChild(card);
+  renderCard(newItem);
+  closeAddModal();
+  updateConfirmedCount();
+  showToast('部材を追加しました');
+  // 追加カードまでスクロール
+  card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+document.getElementById('addItemBtn').addEventListener('click', openAddModal);
+document.getElementById('modalCancel').addEventListener('click', closeAddModal);
+document.getElementById('modalAdd').addEventListener('click', addManualItem);
+document.getElementById('addModal').addEventListener('click', (e) => {
+  if (e.target.id === 'addModal') closeAddModal();
+});
+document.getElementById('manualName').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') addManualItem();
+});
+document.getElementById('manualSpec').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') addManualItem();
+});
 
 document.getElementById('nextBtn').addEventListener('click', () => {
   if (items.every(x => x.confirmed)) showStep(4);
