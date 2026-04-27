@@ -804,7 +804,7 @@
   .summary-card .heading { font-size: 15px; font-weight: 700; margin-bottom: 3px; }
   .summary-card .desc { font-size: 11px; opacity: 0.9; line-height: 1.5; }
 
-  .stats-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+  .stats-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
   .stat-cell {
     background: #fff;
     border: 1px solid #eef0f5;
@@ -1127,55 +1127,27 @@
           <div class="summary-card">
             <div class="icon-circle">&#10003;</div>
             <div class="heading">部材確定 完了</div>
-            <div class="desc">5点すべての確認が完了しました</div>
+            <div class="desc" id="step4Desc">5点すべての確認が完了しました</div>
           </div>
 
           <div class="stats-row">
             <div class="stat-cell">
-              <div class="num">5</div>
+              <div class="num" id="step4Total">5</div>
               <div class="lbl">部材点数</div>
             </div>
             <div class="stat-cell">
-              <div class="num">4</div>
+              <div class="num" id="step4Types">4</div>
               <div class="lbl">種類</div>
-            </div>
-            <div class="stat-cell">
-              <div class="num">88%</div>
-              <div class="lbl">AI 一致率</div>
             </div>
           </div>
 
-          <div class="table-card">
+          <div class="table-card" id="step4Table">
             <div class="table-head">
               <div>部材名</div>
               <div style="text-align:right">規格</div>
               <div style="text-align:right">数</div>
             </div>
-            <div class="table-row">
-              <div class="name">PE管 SDR11</div>
-              <div class="spec">50A</div>
-              <div class="qty">1</div>
-            </div>
-            <div class="table-row">
-              <div class="name">エルボ 90&deg;</div>
-              <div class="spec">50A</div>
-              <div class="qty">1</div>
-            </div>
-            <div class="table-row">
-              <div class="name">ソケット</div>
-              <div class="spec">50A</div>
-              <div class="qty">1</div>
-            </div>
-            <div class="table-row">
-              <div class="name">バルブ ボール</div>
-              <div class="spec">50A</div>
-              <div class="qty">1</div>
-            </div>
-            <div class="table-row">
-              <div class="name">継手 フランジ</div>
-              <div class="spec">50A</div>
-              <div class="qty">1</div>
-            </div>
+            <!-- 行は JS で動的に生成 -->
           </div>
 
           <button class="csv-btn" id="csvBtn"><span class="ico">&#128229;</span> CSV を出力する</button>
@@ -1223,28 +1195,28 @@
 // ===== 部材データ =====
 const items = [
   {
-    id: 1, ai: 'PE管 SDR11 50A', spec: '黄色 / 直管', conf: 95,
-    confidence: 'high', confirmed: false, candidates: ['PE管 SDR11 50A', 'PE管 SDR17 50A', '鋼管 50A'],
+    id: 1, ai: 'PE管 SDR11 50A', spec: '黄色 / 直管',
+    confirmed: false, candidates: ['PE管 SDR11 50A', 'PE管 SDR17 50A', '鋼管 50A'],
     thumbCls: 'green'
   },
   {
-    id: 2, ai: 'エルボ 90° 50A SUS', spec: '候補 3 件', conf: 92,
-    confidence: 'high', confirmed: false, candidates: ['エルボ 90° 50A SUS', 'エルボ 45° 50A SUS', 'チーズ 50A'],
+    id: 2, ai: 'エルボ 90° 50A SUS', spec: '候補 3 件',
+    confirmed: false, candidates: ['エルボ 90° 50A SUS', 'エルボ 45° 50A SUS', 'チーズ 50A'],
     thumbCls: ''
   },
   {
-    id: 3, ai: 'ソケット 50A SUS', spec: '候補 3 件', conf: 71,
-    confidence: 'mid', confirmed: false, candidates: ['レジューサ 50×40 SUS', 'ソケット 50A SUS', '径違いソケット 50×40'],
+    id: 3, ai: 'ソケット 50A SUS', spec: '候補 3 件',
+    confirmed: false, candidates: ['レジューサ 50×40 SUS', 'ソケット 50A SUS', '径違いソケット 50×40'],
     thumbCls: 'gray'
   },
   {
-    id: 4, ai: 'バルブ ボール 50A', spec: 'レバー式', conf: 89,
-    confidence: 'high', confirmed: false, candidates: ['バルブ ボール 50A', 'バルブ ゲート 50A', 'バルブ チェック 50A'],
+    id: 4, ai: 'バルブ ボール 50A', spec: 'レバー式',
+    confirmed: false, candidates: ['バルブ ボール 50A', 'バルブ ゲート 50A', 'バルブ チェック 50A'],
     thumbCls: 'amber'
   },
   {
-    id: 5, ai: '継手 フランジ 50A', spec: 'JIS 10K', conf: 84,
-    confidence: 'high', confirmed: false, candidates: ['継手 フランジ 50A', '継手 ねじ込み 50A', '継手 メカニカル 50A'],
+    id: 5, ai: '継手 フランジ 50A', spec: 'JIS 10K',
+    confirmed: false, candidates: ['継手 フランジ 50A', '継手 ねじ込み 50A', '継手 メカニカル 50A'],
     thumbCls: ''
   }
 ];
@@ -1410,7 +1382,6 @@ function confirmItem(id) {
   const it = items.find(x => x.id === id);
   it.confirmed = true;
   it.editing = false;
-  if (it.selectedIndex === null) it.selectedIndex = null;
   renderCard(it);
   updateConfirmedCount();
 }
@@ -1515,6 +1486,8 @@ function selectPart(idx) {
   const newItem = {
     id: nextManualId++,
     ai: `${p.name} ${p.spec}`,
+    baseName: p.name,
+    sizeStr: p.spec,
     spec: `${p.cat} / 手動追加`,
     candidates: [],
     confirmed: true,
@@ -1555,8 +1528,66 @@ document.getElementById('searchInput').addEventListener('input', (e) => {
 });
 
 document.getElementById('nextBtn').addEventListener('click', () => {
-  if (items.every(x => x.confirmed)) showStep(4);
+  if (items.every(x => x.confirmed)) {
+    renderStep4();
+    showStep(4);
+  }
 });
+
+// ===== STEP4 動的レンダリング =====
+function getNameSize(it) {
+  // 手動追加: baseName/sizeStr が分離済み
+  if (it.manual && it.baseName) {
+    return { name: it.baseName, size: it.sizeStr || '' };
+  }
+  // AI推測: 候補選択済みなら候補名、それ以外は ai
+  const fullName = (it.confirmed && it.selectedIndex != null && !it.manual)
+    ? it.candidates[it.selectedIndex]
+    : it.ai;
+  // 末尾のサイズ表記（数字+A、数字×数字、SUS等の修飾）を抽出
+  const m = fullName.match(/\s+(\d+(?:[A-Z]|×\d+)[\s\S]*)$/);
+  if (m) {
+    return { name: fullName.substring(0, m.index).trim(), size: m[1].trim() };
+  }
+  return { name: fullName, size: '—' };
+}
+
+function aggregateForStep4() {
+  const map = new Map();
+  for (const it of items) {
+    const { name, size } = getNameSize(it);
+    const key = name + '|' + size;
+    if (map.has(key)) {
+      map.get(key).qty += 1;
+    } else {
+      map.set(key, { name, size, qty: 1 });
+    }
+  }
+  return Array.from(map.values());
+}
+
+function renderStep4() {
+  const total = items.length;
+  const aggregated = aggregateForStep4();
+  // Summary
+  document.getElementById('step4Desc').textContent = `${total}点すべての確認が完了しました`;
+  // Stats
+  document.getElementById('step4Total').textContent = total;
+  document.getElementById('step4Types').textContent = aggregated.length;
+  // Table — clear old rows, add new
+  const table = document.getElementById('step4Table');
+  table.querySelectorAll('.table-row').forEach(r => r.remove());
+  aggregated.forEach(it => {
+    const row = document.createElement('div');
+    row.className = 'table-row';
+    row.innerHTML = `
+      <div class="name">${escapeHtml(it.name)}</div>
+      <div class="spec">${escapeHtml(it.size)}</div>
+      <div class="qty">${it.qty}</div>
+    `;
+    table.appendChild(row);
+  });
+}
 
 // ===== STEP4 =====
 document.getElementById('csvBtn').addEventListener('click', () => {
